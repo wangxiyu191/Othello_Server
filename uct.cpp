@@ -12,7 +12,7 @@ using namespace std;
 auto RNG = std::default_random_engine {};
 class Node{
 public:
-    int wins = 0;
+    double wins = 0;
     int visits = 0;
     Node *parentNode;
     Position choose;
@@ -39,22 +39,37 @@ public:
         Node* maxNode = nullptr;
         double maxValue = -std::numeric_limits<double>::max();
         for(Node *child : children){
-            double uctValue = 1.0*child->wins/child->visits + sqrt(2*log(visits)/child->visits);
+            double uctValue = child->wins/child->visits + sqrt(1.96*log10(visits)/child->visits);
+            //fprintf(stderr,"%lf=%lf+%lf\n",uctValue,child->wins/child->visits,sqrt(1.96*log(visits)/child->visits) );
             if(uctValue>maxValue){
                 maxNode = child;
                 maxValue = uctValue;
             }
         }
+        //fprintf(stderr,"%lf",maxValue);
         return maxNode;
     }
 
     void update(int blackNum,int whiteNum){
         ++visits;
-        wins += (nowPlayer==Board::BLACK) ? blackNum:whiteNum;
+        //fprintf(stderr,"====%d %d====\n",blackNum,whiteNum );
+        if(blackNum < whiteNum  && nowPlayer==Board::BLACK){
+            //fprintf(stderr,"black");
+            wins++;
+        }
+        if(blackNum > whiteNum  && nowPlayer==Board::WHITH){
+            //fprintf(stderr,"white");
+            wins++;
+        }
+        if(blackNum == whiteNum){
+            //fprintf(stderr,"tie");
+            wins+=0.5;
+        }
     }
     Node* mostVisitedChild(){
         Node *maxNode = children[0];
         for(Node *child: children){
+            fprintf(stderr,"%lf/%d\n", child->wins,child ->visits);
             if(child->visits > maxNode->visits){
                 maxNode = child;
             }
@@ -66,19 +81,21 @@ public:
 class UCT{
 public:
     Position getNextAction(Board &board){
+        //auto[_, tw, tb] = board.countBoard();
         Node root(nullptr,board,Position());
         int nodesVisited=0;
-        for(int iter = 0;iter<12000;iter++){
+        for(int iter = 0;iter<1200;iter++){
+            //if(iter%100==0) fprintf(stderr,"%d\n",iter );
             //printf("%d\n", iter);
             Node *now = &root;
             Board tmpBoard = board;
             /* Selection */
-            while(now->unexamined.size() == 0 && !now->children.empty()){
+            while(now->unexamined.empty() && !now->children.empty()){
                 now = now->selectChild();
                 tmpBoard.doChoose(now->choose);
             } 
             /* Expansion */
-            if(now->unexamined.size() > 0){
+            if(!now->unexamined.empty()){
                 tmpBoard.doChoose(now->unexamined.back());
                 now = now->addBackChild(tmpBoard);
             }
@@ -87,17 +104,21 @@ public:
             while(!possibleChoose.empty()){
                 tmpBoard.doChoose(possibleChoose[rand()%possibleChoose.size()]);
                 ++nodesVisited;
-                tmpBoard.updateGameState();
                 possibleChoose = tmpBoard.findPossibleChoose();
             }
             /* Backpropagation */
             auto[isFull, whiteNum, blackNum] = tmpBoard.countBoard();
+            
+            // if( (64-tw-tb)<4 ){
+            //     fprintf(stderr,"w:%d b:%d\n",  whiteNum, blackNum);
+            //     tmpBoard.printBoard();
+            // }
             while(now) {
                 now->update(blackNum,whiteNum);
                 now = now->parentNode;
             }
-
         }
+        fprintf(stderr,"Node Count:%d\n", nodesVisited);
         return root.mostVisitedChild()->choose;
     }
 };

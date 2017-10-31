@@ -42,6 +42,7 @@ class Board {
     char board[8][8];
    
 public:
+    bool gameEnd = false;
     static const int EMPTY = -1;
     static const int WHITH = 0;
     static const int BLACK = 1;
@@ -72,37 +73,72 @@ public:
         return board[pos.row][pos.col];
     }
 
-    std::tuple<bool, std::vector<Position>> isAbleToChoose(int row, int col)
-    {
-        return isAbleToChoose(Position(row, col));
-    }
+   
 
-    std::tuple<bool, std::vector<Position>> isAbleToChoose(Position pos)
+    std::tuple<bool, std::vector<Position>> doChooseAnalysis(Position pos,bool requestChange)
     {
         std::vector<Position> needToChange;
+        bool ableToChoose = false;
         if ((*this)[pos] != -1) {
-            return { false, needToChange };
+            return { ableToChoose, needToChange };
         }
+        std::vector<Position> others;
         for (Position nowd : direction) {
             Position now = pos + nowd;
             //printf("%d %d\n", pos.row, pos.col);
-            std::vector<Position> others;
+            if(requestChange){
+                others.clear();
+            }
+            bool hasOthers = false;
             while (now.isVaild()) {
+                //printf("%d %d\n", now.row, now.col);
                 if ((*this)[now] == nowPlayer) {
-                    if (!others.empty()) {
+                    //find another self
+                    if(requestChange && !others.empty()){
                         needToChange.insert(needToChange.end(), others.begin(), others.end());
-                    } else {
-                        break;
                     }
+                    if(!requestChange && hasOthers){
+                        ableToChoose = true;
+                    }
+                    break;
                 } else if ((*this)[now] == !nowPlayer) {
-                    others.push_back(now);
+                    //find the other player
+                    if(requestChange){
+                        others.push_back(now);
+                    }else{
+                        hasOthers = true;
+                    }
                 } else {
+                    //find space
                     break;
                 }
                 now += nowd;
             }
         }
-        return { !needToChange.empty(), needToChange };
+        if(requestChange){
+            return { !needToChange.empty(), needToChange };
+        }else{
+            return {ableToChoose,needToChange};
+        }
+        
+    }
+
+    bool isAbleToChoose(int row, int col)
+    {
+        return isAbleToChoose(Position(row, col));
+    }
+
+    bool isAbleToChoose(Position pos)
+    {
+        auto [ableToChoose,needToChange] = doChooseAnalysis(pos,false);
+        return ableToChoose;
+    }
+
+
+
+    std::tuple<bool, std::vector<Position>> isAbleToChooseWithChange(Position pos)
+    {
+        return doChooseAnalysis(pos,true);
     }
 
     std::vector<Position> findPossibleChoose()
@@ -111,7 +147,10 @@ public:
         Position now(0, 0);
         for (now.col = 0; now.row < 8; now.row++) {
             for (now.col = 0; now.col < 8; now.col++) {
-                auto[ableToChoose, needToChange] = isAbleToChoose(now);
+                if((*this)[now] != -1){
+                    continue;
+                }
+                bool ableToChoose  = isAbleToChoose(now);
                 // for (Position p : needToChange) {
                 //     printf("%d %d\n", p.row, p.col);
                 // }
@@ -125,7 +164,7 @@ public:
 
     bool doChoose(Position pos)
     {
-        auto [ableToChoose, needToChange] = isAbleToChoose(pos);
+        auto [ableToChoose, needToChange] = isAbleToChooseWithChange(pos);
         if (ableToChoose) {
             for (Position p : needToChange) {
                 (*this)[p] = nowPlayer;
@@ -135,6 +174,19 @@ public:
         }
         (*this)[pos] = nowPlayer;
         nowPlayer = !nowPlayer;
+        std::vector<Position> possibleChoose = findPossibleChoose();
+        if (possibleChoose.size() == 0) {
+            nowPlayer = !nowPlayer;
+            possibleChoose = findPossibleChoose();
+            if (possibleChoose.size() == 0) {
+                gameEnd = true;
+            }
+        }
+
+
+        auto[isFull, whiteNum, blackNum] = countBoard();
+        gameEnd = gameEnd || isFull;
+        
         return true;
     }
     std::tuple<bool, int, int> countBoard()
@@ -160,31 +212,6 @@ public:
         return { isFull, whiteNum, blackNum };
     }
 
-    std::tuple<bool, int, int> updateGameState()
-    {
-        bool gameEnd = false;
-        auto[isFull, whiteNum, blackNum] = countBoard();
-
-        gameEnd = gameEnd || isFull;
-
-        std::vector<Position> possibleChoose = findPossibleChoose();
-        if (possibleChoose.size() == 0) {
-            nowPlayer = !nowPlayer;
-            possibleChoose = findPossibleChoose();
-            if (possibleChoose.size() == 0) {
-                gameEnd = true;
-            }
-        }
-
-        // if(possibleChoose.size() != 0)
-        // {
-        //     possibleChoose.forEach(function(pos){
-        //         //console.log("#"+pos[0]+"-"+pos[1]);
-        //         $("#"+pos[0]+"-"+pos[1]).css('border-color','yellow');
-        //     });
-        // }
-        return { gameEnd, whiteNum, blackNum };
-    }
     void printBoard()
     {
         Position now;
