@@ -1,3 +1,4 @@
+#pragma once
 #include <cstring>
 #include <iostream>
 #include <tuple>
@@ -48,6 +49,10 @@ public:
     static const int BLACK = 1;
     int nowPlayer;
 
+    std::vector<Position> lastFlipped;
+    Position lastChoose;
+    bool isAbleToUndo = false;
+
     Board()
     {
         memset(board, -1, sizeof(board));
@@ -58,11 +63,14 @@ public:
 
         nowPlayer = BLACK;
     }
-    Board(const Board &b)
+    Board(const Board &rhs)
     {
-        memcpy(board,b.board,sizeof(board));
-        nowPlayer = b.nowPlayer;
-
+        memcpy(board,rhs.board,sizeof(board));
+        nowPlayer = rhs.nowPlayer;
+        lastFlipped = rhs.lastFlipped;
+        lastChoose = rhs.lastChoose;
+        gameEnd = rhs.gameEnd;
+        isAbleToUndo = rhs.isAbleToUndo;
     }
     char& operator[](Position pos)
     {
@@ -72,7 +80,15 @@ public:
     {
         return board[pos.row][pos.col];
     }
-
+    Board& operator=(const Board &rhs){
+        memcpy(board,rhs.board,sizeof(board));
+        nowPlayer = rhs.nowPlayer;
+        lastFlipped = rhs.lastFlipped;
+        lastChoose = rhs.lastChoose;
+        gameEnd = rhs.gameEnd;
+        isAbleToUndo = rhs.isAbleToUndo;
+        return *this;
+    }
    
 
     std::tuple<bool, std::vector<Position>> doChooseAnalysis(Position pos,bool requestChange)
@@ -166,12 +182,17 @@ public:
     {
         auto [ableToChoose, needToChange] = isAbleToChooseWithChange(pos);
         if (ableToChoose) {
+            lastFlipped.clear();
             for (Position p : needToChange) {
+                lastFlipped.push_back(p);
                 (*this)[p] = nowPlayer;
             }
         } else {
             return false;
         }
+        lastChoose = pos;
+        isAbleToUndo = true;
+
         (*this)[pos] = nowPlayer;
         nowPlayer = !nowPlayer;
         std::vector<Position> possibleChoose = findPossibleChoose();
@@ -179,6 +200,7 @@ public:
             nowPlayer = !nowPlayer;
             possibleChoose = findPossibleChoose();
             if (possibleChoose.size() == 0) {
+                nowPlayer = !nowPlayer;
                 gameEnd = true;
             }
         }
@@ -189,6 +211,25 @@ public:
         
         return true;
     }
+
+    bool undoLastChoose(){
+        if(!isAbleToUndo){
+            return false;
+        }
+
+        for(Position p : lastFlipped){
+            (*this)[p] = nowPlayer; //被吃掉的棋子肯定是现在执子的
+        }
+        (*this)[lastChoose] = EMPTY;
+
+        nowPlayer = !nowPlayer;
+
+        isAbleToUndo = false;
+        gameEnd = false;
+
+        return true;
+    }
+
     std::tuple<bool, int, int> countBoard()
     {
         bool isFull = true;
