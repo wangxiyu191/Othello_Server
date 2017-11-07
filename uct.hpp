@@ -21,29 +21,36 @@
 #include <limits>
 #include "board.hpp"
 
-class Node{
+class Node {
 public:
     double wins = 0;
     int visits = 0;
     Node *parentNode;
     Position choose;
-    
+
     std::vector<Position> unexamined;
-    std::vector<Node*> children;
-    int nowPlayer ;
+    std::vector<Node *> children;
+    int nowPlayer;
+
     Node();
-    Node(Node *parentNode,Board &board,Position choose,int player);
+
+    Node(Node *parentNode, Board &board, Position choose, int player);
+
     ~Node();
-    Node* addBackChild(Board &board,int player);
-    Node* selectChild();
-    
-    void update(int blackNum,int whiteNum);
-    Node* mostVisitedChild();
+
+    Node *addBackChild(Board &board, int player);
+
+    Node *selectChild();
+
+    void update(int blackNum, int whiteNum);
+
+    Node *mostVisitedChild();
 };
 
 
-class UCT{
+class UCT {
 public:
     Position getNextAction(Board &board);
 };
+
 #endif /* uct_hpp */
