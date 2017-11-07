@@ -1,41 +1,23 @@
-#include <cstring>
-#include <iostream>
-#include <tuple>
-#include <vector>
-#include <algorithm>
-#include <random>
-#include <climits>
-#include <cmath>
-#include <limits>
-#include "board.cpp"
+#include "uct.hpp"
 using namespace std;
 auto RNG = std::default_random_engine {};
-class Node{
-public:
-    double wins = 0;
-    int visits = 0;
-    Node *parentNode;
-    Position choose;
-    
-    vector<Position> unexamined;
-    vector<Node*> children;
-    int nowPlayer ;
-    Node(Node *parentNode,Board &board,Position choose,int player):parentNode(parentNode),choose(choose),nowPlayer(player){
+
+Node::Node(Node *parentNode,Board &board,Position choose,int player):parentNode(parentNode),choose(choose),nowPlayer(player){
         unexamined = board.findPossibleChoose();
         std::shuffle(unexamined.begin(), unexamined.end(), RNG);
     }
-    ~Node(){
+    Node::~Node(){
         for(Node *child:children){
             delete child;
         }
     }
-    Node* addBackChild(Board &board,int player){
+    Node* Node::addBackChild(Board &board,int player){
         Node *now = new Node(this,board,unexamined.back(),player);
         unexamined.pop_back();
         children.push_back(now);
         return now;
     }
-    Node* selectChild(){
+    Node* Node::selectChild(){
         Node* maxNode = nullptr;
         //fprintf(stderr, "in\n");
         double maxValue = -std::numeric_limits<double>::max();
@@ -52,8 +34,8 @@ public:
         //fprintf(stderr,"%lf",maxValue);
         return maxNode;
     }
-
-    void update(int blackNum,int whiteNum){
+    
+    void Node::update(int blackNum,int whiteNum){
         ++visits;
         //fprintf(stderr,"====%d %d====\n",blackNum,whiteNum );
         if(blackNum > whiteNum  && nowPlayer==Board::BLACK){
@@ -69,7 +51,7 @@ public:
             wins+=0.5;
         }
     }
-    Node* mostVisitedChild(){
+    Node* Node::mostVisitedChild(){
         Node *maxNode = children[0];
         for(Node *child: children){
             fprintf(stderr,"[%d,%d] %lf/%d\n",child->choose.row,child->choose.col, child->wins,child ->visits);
@@ -80,15 +62,13 @@ public:
         fprintf(stderr, "Posibilty:%lf\n", 1.0*maxNode->wins/maxNode->visits);
         return maxNode;
     }
-};
 
-class UCT{
-public:
-    Position getNextAction(Board &board){
+
+    Position UCT::getNextAction(Board &board){
         //auto[_, tw, tb] = board.countBoard();
         Node root(nullptr,board,Position(),-1);
         int nodesVisited=0;
-        for(int iter = 0;iter<1200;iter++){
+        for(int iter = 0;iter<12000;iter++){
             //if(iter%100==0) fprintf(stderr,"%d\n",iter );
             //printf("%d\n", iter);
             Node *now = &root;
@@ -97,7 +77,7 @@ public:
             while(now->unexamined.empty() && !now->children.empty()){
                 now = now->selectChild();
                 tmpBoard.doChoose(now->choose);
-            } 
+            }
             /* Expansion */
             if(!now->unexamined.empty()){
                 int player = tmpBoard.nowPlayer;
@@ -129,4 +109,3 @@ public:
         // }
         return root.mostVisitedChild()->choose;
     }
-};

@@ -1,5 +1,5 @@
-#include "uct.cpp"
-#include "fullsearch.cpp"
+#include "uct.hpp"
+#include "fullsearch.hpp"
 #include <cstring>
 #include <iostream>
 #include <tuple>
@@ -9,14 +9,14 @@ using namespace std;
 int main(int argc, char const* argv[])
 {
     Board test;
-
+    
     // test.updateGameState();
     // test.doChoose(Position(2, 3));
     // test.printBoard();
-
+    
     UCT uct;
     FullSearch fullsearch;
-
+    
     if (argc == 2) {
         while (!test.findPossibleChoose().empty()) {
             if (test.nowPlayer == Board::BLACK) {
@@ -35,10 +35,10 @@ int main(int argc, char const* argv[])
                 fflush(stdout);
                 test.doChoose(choose);
             }
-
+            
             //test.printBoard();
         }
-
+        
     } else {
         test.printBoard();
         while (!test.gameEnd) {
@@ -59,6 +59,6 @@ int main(int argc, char const* argv[])
         
         
     }
-
+    
     return 0;
 }

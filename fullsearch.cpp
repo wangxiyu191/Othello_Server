@@ -1,26 +1,19 @@
-#include <cstring>
-#include <iostream>
-#include <tuple>
-#include <vector>
-#include <algorithm>
-#include <random>
-#include <climits>
-#include <cmath>
-#include <limits>
-#include "board.cpp"
+//
+//  fullsearch.cpp
+//  Othello_Server
+//
+//  Created by 王悉宇 on 2017/11/7.
+//  Copyright © 2017年 王悉宇. All rights reserved.
+//
+
+#include "fullsearch.hpp"
 using namespace std;
 
 
-class FullSearch
-{
-    const static int WIN = 1;
-    const static int TIE = 0; 
-    const static int LOST = -1;
-    
-public:
-    FullSearch()=default;
-    ~FullSearch()=default;
-    int search(Board &board){
+
+    FullSearch::FullSearch()=default;
+FullSearch::~FullSearch()=default;
+    int FullSearch::search(Board &board){
         if(board.gameEnd){
             auto [isFull, whiteNum, blackNum ] = board.countBoard();
             if(whiteNum == blackNum){
@@ -35,13 +28,13 @@ public:
         }
         bool isAbleToWin = false;
         bool isAbleToLost = false;
-
+        
         vector<Position> possibleChoose = board.findPossibleChoose();
         for(Position choose : possibleChoose){
             Board tmpBoard = board;
             tmpBoard.doChoose(choose);
             int value = search(tmpBoard);
-
+            
             //这里胜负正好相反，下一手赢了，说明当前手输了。
             if(tmpBoard.nowPlayer != board.nowPlayer){
                 switch(value){
@@ -53,7 +46,7 @@ public:
             // if(board.nowPlayer == Board::WHITH){
             //     printf("%d\n", value);
             // }
-
+            
             if(value == WIN){
                 isAbleToWin = true;
                 break;
@@ -69,7 +62,7 @@ public:
             return TIE;
         }
     }
-    Position getNextAction(Board &board){
+    Position FullSearch::getNextAction(Board &board){
         Board tmpBoard = board;
         vector<Position> possibleChoose = tmpBoard.findPossibleChoose();
         Position bestChoose;
@@ -78,7 +71,7 @@ public:
             tmpBoard = board;
             tmpBoard.doChoose(choose);
             int value = search(tmpBoard);
-
+            
             if(tmpBoard.nowPlayer != board.nowPlayer){
                 switch(value){
                     case WIN: value = LOST;break;
@@ -90,19 +83,18 @@ public:
                 bestValue = value;
                 bestChoose = choose;
             }
-
+            
             fprintf(stderr,"value = %d\n",value );
             if(bestValue == WIN){
                 fprintf(stderr,"%s think he will win\n",board.nowPlayer == Board::BLACK?"black":"white" );
                 break;
             }
         }
-
+        
         if(bestValue == LOST){
             fprintf(stderr,"%s think he will lose\n",board.nowPlayer == Board::BLACK?"black":"white" );
         }
-
+        
         return bestChoose ;
     }
-    
-};
+
