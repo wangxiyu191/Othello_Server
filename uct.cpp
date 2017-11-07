@@ -48,7 +48,7 @@ void Node::update(int blackNum, int whiteNum) {
         //fprintf(stderr,"black\n");
         wins++;
     }
-    if (blackNum < whiteNum && nowPlayer == Board::WHITH) {
+    if (blackNum < whiteNum && nowPlayer == Board::WHITE) {
         //fprintf(stderr,"white\n");
         wins++;
     }
@@ -96,8 +96,7 @@ Position UCT::getNextAction(Board &board) {
 
         while (!tmpBoard.gameEnd) {
             vector<Position> possibleChoose = tmpBoard.findPossibleChoose();
-            std::uniform_int_distribution<int> dis(0, static_cast<int>(possibleChoose.size()-1));
-            tmpBoard.doChoose(possibleChoose[dis(RNG) % possibleChoose.size()]);
+            tmpBoard.doChoose(possibleChoose[rand() % possibleChoose.size()]);
             ++nodesVisited;
         }
         /* Backpropagation */

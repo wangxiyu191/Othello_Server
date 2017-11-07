@@ -18,43 +18,85 @@ inline Position Position::operator+=(const Position &rhs) {
     return *this;
 }
 
-bool Position::isVaild() {
-    return row >= 0 && row < 8 && col >= 0 && col < 8;
-}
 
 inline Position operator+(const Position &lhs, const Position &rhs) {
-    Position sum = lhs;
-    sum += rhs;
-    return sum;
+//    Position sum = lhs;
+//    sum += rhs;
+//    return sum;
+    return Position(lhs.row+rhs.row,lhs.col+rhs.col);
 }
 
 
 Board::Board() {
-    memset(board, -1, sizeof(board));
-    board[3][3] = 0;
-    board[3][4] = 1;
-    board[4][3] = 1;
-    board[4][4] = 0;
+    memset(&board, 0, sizeof(board));
+    memset(&used, 0, sizeof(used));
 
+    //board[3][3] = 0;
+    used |= U64_1 << (3*8+3);
+    //board[3][4] = 1;
+    board |= U64_1 << (3*8+4);
+    used |= U64_1 << (3*8+4);
+    //board[4][3] = 1;
+    board |= U64_1 << (4*8+3);
+    used |= U64_1 << (4*8+3);
+    //board[4][4] = 0;
+    used |= U64_1 << (4*8+4);
     nowPlayer = BLACK;
+
 }
 
 Board::Board(const Board &rhs) {
-    memcpy(board, rhs.board, sizeof(board));
+    board = rhs.board;
+    used = rhs.used;
     nowPlayer = rhs.nowPlayer;
     gameEnd = rhs.gameEnd;
 }
 
-char &Board::operator[](Position pos) {
-    return board[pos.row][pos.col];
+inline int Board::readBoard(const Position &pos){
+    if(used & (U64_1 << ( (pos.row)*8+(pos.col) ))){
+        if(board & (U64_1 << ( (pos.row)*8+(pos.col) ))){
+            return BLACK;
+        }else{
+            return WHITE;
+        }
+    }else{
+        return EMPTY;
+    }
 }
 
-const char &Board::operator[](Position pos) const {
-    return board[pos.row][pos.col];
+inline void Board::setBoard(const Position &pos,int chess){
+    if(chess == EMPTY) {
+        used &= ~(U64_1 << ((pos.row ) * 8 + (pos.col )));
+    }else{
+        used |= U64_1 << ((pos.row ) * 8 + (pos.col ));
+        if(chess == BLACK){
+            board |= (U64_1 << ((pos.row) * 8 + (pos.col )));
+        }else{
+            board &= ~(U64_1 << ((pos.row ) * 8 + (pos.col )));
+        }
+
+    }
 }
+
+inline void Board::setEmpty(const Position &pos){
+    used &= ~(U64_1 << ((pos.row ) * 8 + (pos.col )));
+}
+
+inline bool Board::isEmpty(const Position &pos){
+    return  !(used & U64_1 << ( (pos.row)*8+(pos.col) ) );
+}
+
+//char &Board::operator[](Position pos) {
+//    return board[pos.row][pos.col];
+//}
+//
+//const char &Board::operator[](Position pos) const {
+//    return board[pos.row][pos.col];
+//}
 
 Board &Board::operator=(const Board &rhs) {
-    memcpy(board, rhs.board, sizeof(board));
+    board = rhs.board;
+    used = rhs.used;
     nowPlayer = rhs.nowPlayer;
     gameEnd = rhs.gameEnd;
     return *this;
@@ -69,7 +111,7 @@ std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bo
     needToChange.clear();
 
     bool ableToChoose = false;
-    if ((*this)[pos] != -1) {
+    if (!isEmpty(pos)) {
         return {ableToChoose, needToChange};
     }
 
@@ -77,16 +119,19 @@ std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bo
     static std::vector<Position> others;
     others.reserve(9);
     others.clear();
+    Position now;
     for (const Position &nowd : direction) {
-        Position now = pos + nowd;
+        now.row = pos.row + nowd.row;
+        now.col = pos.col + nowd.col;
         //printf("%d %d\n", pos.row, pos.col);
         if (requestChange) {
             others.clear();
         }
         bool hasOthers = false;
-        while (now.isVaild()) {
-            //printf("%d %d\n", now.row, now.col);
-            if ((*this)[now] == nowPlayer) {
+        while (now.row >= 0 && now.row < 8 && now.col >= 0 && now.col < 8) {
+
+            int posState = readBoard(now);
+            if ( posState == nowPlayer) {
                 //find another self
                 if (requestChange && !others.empty()) {
                     needToChange.insert(needToChange.end(), others.begin(), others.end());
@@ -95,7 +140,7 @@ std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bo
                     ableToChoose = true;
                 }
                 break;
-            } else if ((*this)[now] == !nowPlayer) {
+            } else if ( posState == !nowPlayer) {
                 //find the other player
                 if (requestChange) {
                     others.push_back(now);
@@ -106,7 +151,8 @@ std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bo
                 //find space
                 break;
             }
-            now += nowd;
+            now.row = now.row + nowd.row;
+            now.col = now.col + nowd.col;
         }
     }
     if (requestChange) {
@@ -137,9 +183,9 @@ std::vector<Position> Board::findPossibleChoose() {
     possibleChoose.reserve(12);
     possibleChoose.clear();
     Position now(0, 0);
-    for (now.col = 0; now.row < 8; now.row++) {
+    for (now.row = 0; now.row < 8; now.row++) {
         for (now.col = 0; now.col < 8; now.col++) {
-            if ((*this)[now] != -1) {
+            if (!isEmpty(now)) {
                 continue;
             }
             bool ableToChoose = isAbleToChoose(now);
@@ -160,7 +206,7 @@ bool Board::doChoose(Position pos) {
         // lastFlipped.clear();
         for (Position p : needToChange) {
             // lastFlipped.push_back(p);
-            (*this)[p] = nowPlayer;
+            setBoard(p,nowPlayer);
         }
     } else {
         return false;
@@ -168,13 +214,13 @@ bool Board::doChoose(Position pos) {
     // lastChoose = pos;
     // isAbleToUndo = true;
 
-    (*this)[pos] = nowPlayer;
+    setBoard(pos,nowPlayer);
     nowPlayer = !nowPlayer;
     std::vector<Position> possibleChoose = findPossibleChoose();
-    if (possibleChoose.size() == 0) {
+    if (possibleChoose.empty()) {
         nowPlayer = !nowPlayer;
         possibleChoose = findPossibleChoose();
-        if (possibleChoose.size() == 0) {
+        if (possibleChoose.empty()) {
             nowPlayer = !nowPlayer;
             gameEnd = true;
         }
@@ -206,38 +252,49 @@ bool Board::doChoose(Position pos) {
 // }
 
 std::tuple<bool, int, int> Board::countBoard() {
-    bool isFull = true;
-    int whiteNum = 0;
-    int blackNum = 0;
-    Position now;
-    for (now.row = 0; now.row < 8; now.row++) {
-        for (now.col = 0; now.col < 8; now.col++) {
-            if ((*this)[now] == EMPTY) {
-                isFull = false;
-            }
-            if ((*this)[now] == BLACK) {
-                blackNum++;
-            }
-            if ((*this)[now] == WHITH) {
-                whiteNum++;
-            }
-        }
-    }
-
-    return {isFull, whiteNum, blackNum};
+    //printBoard();
+    int blackNum =  __builtin_popcountll(board&used);
+    int whiteNum =  __builtin_popcountll( (~board)&used );
+    //printf("%d,%d\n",whiteNum,blackNum);
+//
+//    for (now.row = 0; now.row < 8; now.row++) {
+//        for (now.col = 0; now.col < 8; now.col++) {
+//            if (isEmpty(now)) {
+//                isFull = false;
+//            }
+//            else if (readBoard(now) == BLACK) {
+//                blackNum++;
+//            }
+//            else if (readBoard(now) == WHITE) {
+//                whiteNum++;
+//            }
+//        }
+//    }
+//
+//    if(blackNum!= blackNum1){
+//        printBoard();
+//        printf("B %d %d\n",blackNum,blackNum1);
+//        exit(1);
+//    }
+//    if(whiteNum!= whiteNum1){
+//        printBoard();
+//        printf("W %d %d\n",whiteNum,whiteNum1);
+//        exit(1);
+//    }
+    return {whiteNum+blackNum == 8*8, whiteNum,blackNum};
 }
 
 void Board::printBoard() {
     Position now;
     for (now.row = 0; now.row < 8; now.row++) {
         for (now.col = 0; now.col < 8; now.col++) {
-            if ((*this)[now] == EMPTY) {
+            if (isEmpty(now)) {
                 printf("*");
             }
-            if ((*this)[now] == BLACK) {
+            else if (readBoard(now) == BLACK) {
                 printf("1");
             }
-            if ((*this)[now] == WHITH) {
+            else if (readBoard(now) == WHITE) {
                 printf("0");
             }
         }

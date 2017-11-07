@@ -24,7 +24,7 @@ int FullSearch::search(Board &board) {
         if (board.nowPlayer == Board::BLACK) {
             return blackNum > whiteNum ? WIN : LOST;
         }
-        if (board.nowPlayer == Board::WHITH) {
+        if (board.nowPlayer == Board::WHITE) {
             return blackNum < whiteNum ? WIN : LOST;
         }
     }
@@ -51,7 +51,7 @@ int FullSearch::search(Board &board) {
                     break;
             }
         }
-        // if(board.nowPlayer == Board::WHITH){
+        // if(board.nowPlayer == Board::WHITE){
         //     printf("%d\n", value);
         // }
 

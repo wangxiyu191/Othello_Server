@@ -9,11 +9,14 @@
 #ifndef board_hpp
 #define board_hpp
 
-#include <stdio.h>
+
 #include <cstring>
 #include <iostream>
 #include <tuple>
 #include <vector>
+#include <cstdlib>
+#include <cstdio>
+
 
 class Position {
 public:
@@ -24,8 +27,6 @@ public:
     Position operator+=(const Position &rhs);
 
     int row, col;
-
-    bool isVaild();
 };
 
 class Board {
@@ -40,22 +41,20 @@ class Board {
             {1,  -1},
             {-1, 1}
     };
-    char board[8][8];
+    uint64_t board;
+    uint64_t used;
+    static const uint64_t U64_1=1;
 
 public:
     bool gameEnd = false;
     static const int EMPTY = -1;
-    static const int WHITH = 0;
+    static const int WHITE = 0;
     static const int BLACK = 1;
     int nowPlayer;
 
     Board();
 
     Board(const Board &b);
-
-    char &operator[](Position pos);
-
-    const char &operator[](Position pos) const;
 
     Board &operator=(const Board &rhs);
 
@@ -75,6 +74,14 @@ public:
     std::tuple<bool, int, int> countBoard();
 
     void printBoard();
+
+    int readBoard(const Position &pos);
+
+    void setBoard(const Position &pos, int chess);
+
+    void setEmpty(const Position &pos);
+
+    bool isEmpty(const Position &pos);
 };
 
 #endif /* board_hpp */
