@@ -2,3 +2,4 @@
 cmake-build-debug
 main
 main.dSYM
+cmake-build-release
