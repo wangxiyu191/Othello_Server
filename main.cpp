@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
                 Position choose;
                 int whiteNum, blackNum;
                 tie(ignore, whiteNum, blackNum) = test.countBoard();
-                if (whiteNum + blackNum > 8 * 8 - 4 - 13) {
+                if (whiteNum + blackNum > 8 * 8 - 4 - 13 +1000) {
                     choose = fullsearch.getNextAction(test);
                 } else {
                     choose = uct.getNextAction(test);
@@ -54,6 +54,8 @@ int main(int argc, char const *argv[]) {
             test.printBoard();
             tie(ignore, whiteNum, blackNum) = test.countBoard();
             fprintf(stderr, "[Count] black:%d white:%d \n", blackNum, whiteNum);
+            fflush(stderr);
+            fflush(stdout);
         }
 
 

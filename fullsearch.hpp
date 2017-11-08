@@ -21,19 +21,21 @@
 #include "board.hpp"
 
 class FullSearch {
+
+
+public:
     const static int WIN = 1;
     const static int TIE = 0;
     const static int LOST = -1;
-
-public:
     FullSearch();
 
     ~FullSearch();
 
     int search(Board &board);
 
-    Position getNextAction(Board &board);
+    int getGameResult(const Board &board);
 
+    Position getNextAction(const Board &board);
 };
 
 #endif /* fullsearch_hpp */

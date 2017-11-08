@@ -1,5 +1,6 @@
 #include "uct.hpp"
 
+
 using namespace std;
 auto RNG = std::default_random_engine {};
 
@@ -75,6 +76,7 @@ Position UCT::getNextAction(Board &board) {
     //auto[_, tw, tb] = board.countBoard();
     Node root(nullptr, board, Position(), -1);
 
+
     int nodesVisited = 0;
     for (int iter = 0; iter < 12000; iter++) {
         //if(iter%100==0) fprintf(stderr,"%d\n",iter );
@@ -94,14 +96,48 @@ Position UCT::getNextAction(Board &board) {
         }
         /* Simulation */
 
+        int gameResult = FullSearch::TIE;
+        int winner = -1;
+
         while (!tmpBoard.gameEnd) {
+            int whiteNum,blackNum;
+            tie(ignore, whiteNum, blackNum) = tmpBoard.countBoard();
+
+            if (whiteNum + blackNum > 8 * 8 - 4 - 3) {
+                gameResult = fullsearch.getGameResult(tmpBoard);
+                if(gameResult==FullSearch::TIE) {
+                    break;
+                } else if(gameResult == FullSearch::WIN && tmpBoard.nowPlayer == Board::BLACK){
+                    winner = Board::BLACK;
+                }else if(gameResult == FullSearch::LOST && tmpBoard.nowPlayer == Board::WHITE){
+                    winner = Board::BLACK;
+                }else{
+                    winner = Board::WHITE;
+                }
+                break;
+
+            }
+
             vector<Position> possibleChoose = tmpBoard.findPossibleChoose();
             tmpBoard.doChoose(possibleChoose[rand() % possibleChoose.size()]);
+
             ++nodesVisited;
         }
         /* Backpropagation */
         int whiteNum,blackNum;
-        tie(ignore, whiteNum, blackNum) = tmpBoard.countBoard();
+        if(gameResult == FullSearch::TIE){
+            blackNum = 1;
+            whiteNum = 1;
+        }else{
+            if(winner == Board::BLACK){
+                blackNum = 1;
+                whiteNum = 0;
+            }else{
+                blackNum = 0;
+                whiteNum = 1;
+            }
+        }
+
 
         // if( (64-tw-tb)<4 ){
         //     fprintf(stderr,"w:%d b:%d\n",  whiteNum, blackNum);

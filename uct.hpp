@@ -20,6 +20,7 @@
 #include <cmath>
 #include <limits>
 #include "board.hpp"
+#include "fullsearch.hpp"
 
 class Node {
 public:
@@ -49,6 +50,7 @@ public:
 
 
 class UCT {
+    FullSearch fullsearch;
 public:
     Position getNextAction(Board &board);
 };
