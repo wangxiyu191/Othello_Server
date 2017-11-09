@@ -22,6 +22,7 @@
 #include "board.hpp"
 #include "fullsearch.hpp"
 #include "eval.h"
+#include <thread>
 
 class Node {
 public:
@@ -47,6 +48,14 @@ public:
     void update(int blackNum, int whiteNum);
 
     Node *mostVisitedChild();
+
+    bool operator<(const Node &rhs) const;
+
+    bool operator>(const Node &rhs) const;
+
+    bool operator<=(const Node &rhs) const;
+
+    bool operator>=(const Node &rhs) const;
 };
 
 
@@ -54,6 +63,8 @@ class UCT {
     FullSearch fullsearch;
 public:
     Position getNextAction(Board &board);
+
+    void MCTSThread(Node *root,Board &board,int total_count);
 };
 
 #endif /* uct_hpp */

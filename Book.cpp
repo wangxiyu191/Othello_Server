@@ -72,6 +72,10 @@ bool BookChoose::loadBook() {
             in.read(&ch, sizeof(ch));
             in.read((char *) &I, sizeof(I));
             int row= 7-ch/8 , col = 7-ch%8;
+//
+//            int whiteNum,blackNum;
+//            tie(ignore, whiteNum, blackNum) = tmpBoard.countBoard();
+
             if(!tmpBoard.isAbleToChoose(Position(row,col))){
                 printf("errror!!!");
                 exit(1);
@@ -122,8 +126,15 @@ bool BookChoose::loadBook() {
 }
 
 Position BookChoose::getNextAction(const Board &board){
+    Board tmpBoard = board;
+    tmpBoard.inverse();
+    if(GoodChoose.count(board) <=0){
+        return GoodChoose[tmpBoard];
+    }
     return GoodChoose[board];
 }
 int BookChoose::hasNextAction(const Board &board){
-    return static_cast<int>( GoodChoose.count(board));
+    Board tmpBoard = board;
+    tmpBoard.inverse();
+    return static_cast<bool>( GoodChoose.count(board) ) || static_cast<bool>( GoodChoose.count(tmpBoard) );
 }

@@ -18,6 +18,26 @@ inline Position Position::operator+=(const Position &rhs) {
     return *this;
 }
 
+bool Position::operator<(const Position &rhs) const {
+    if (row < rhs.row)
+        return true;
+    if (rhs.row < row)
+        return false;
+    return col < rhs.col;
+}
+
+bool Position::operator>(const Position &rhs) const {
+    return rhs < *this;
+}
+
+bool Position::operator<=(const Position &rhs) const {
+    return !(rhs < *this);
+}
+
+bool Position::operator>=(const Position &rhs) const {
+    return !(*this < rhs);
+}
+
 
 inline Position operator+(const Position &lhs, const Position &rhs) {
 //    Position sum = lhs;
@@ -106,7 +126,7 @@ Board &Board::operator=(const Board &rhs) {
 std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bool requestChange) {
 
     //for speed
-    static std::vector<Position> needToChange;
+     thread_local static std::vector<Position> needToChange;
     needToChange.reserve(18);
     needToChange.clear();
 
@@ -116,7 +136,7 @@ std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bo
     }
 
     //for speed
-    static std::vector<Position> others;
+     thread_local static std::vector<Position> others;
     others.reserve(9);
     others.clear();
     Position now;
@@ -179,7 +199,7 @@ std::tuple<bool, std::vector<Position>> Board::isAbleToChooseWithChange(Position
 
 std::vector<Position> Board::findPossibleChoose() {
     //for speed
-    static std::vector<Position> possibleChoose;
+    thread_local static std::vector<Position> possibleChoose;
     possibleChoose.reserve(12);
     possibleChoose.clear();
     Position now(0, 0);
@@ -201,10 +221,12 @@ std::vector<Position> Board::findPossibleChoose() {
 }
 
 bool Board::doChoose(Position pos) {
-    auto[ableToChoose, needToChange] = isAbleToChooseWithChange(pos);
+    bool ableToChoose;
+    std::vector<Position> needToChange;
+    tie(ableToChoose, needToChange) = isAbleToChooseWithChange(pos);
     if (ableToChoose) {
         // lastFlipped.clear();
-        for (Position p : needToChange) {
+        for ( Position p : needToChange) {
             // lastFlipped.push_back(p);
             setBoard(p,nowPlayer);
         }
@@ -216,7 +238,8 @@ bool Board::doChoose(Position pos) {
 
     setBoard(pos,nowPlayer);
     nowPlayer = !nowPlayer;
-    std::vector<Position> possibleChoose = findPossibleChoose();
+    std::vector<Position> possibleChoose;
+    possibleChoose  = findPossibleChoose();
     if (possibleChoose.empty()) {
         nowPlayer = !nowPlayer;
         possibleChoose = findPossibleChoose();
@@ -226,8 +249,8 @@ bool Board::doChoose(Position pos) {
         }
     }
 
-
-    auto[isFull, whiteNum, blackNum] = countBoard();
+     bool isFull;
+    tie(isFull,std::ignore,std::ignore) = countBoard();
     gameEnd = gameEnd || isFull;
 
     return true;
@@ -300,6 +323,7 @@ void Board::printBoard() {
         }
         printf("\n");
     }
+    fflush(stdout);
 }
 
 void Board::turnLeft(){

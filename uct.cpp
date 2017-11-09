@@ -2,8 +2,7 @@
 
 
 using namespace std;
-auto RNG = std::default_random_engine {std::random_device{}()};
-
+thread_local auto RNG = std::default_random_engine {std::random_device{}()};
 
 Node::Node(Node *parentNode, Board &board, Position choose, int player) : parentNode(parentNode), choose(choose),
                                                                           nowPlayer(player) {
@@ -71,21 +70,33 @@ Node *Node::mostVisitedChild() {
     return maxNode;
 }
 
+bool Node::operator<(const Node &rhs) const {
+    return choose < rhs.choose;
+}
 
-Position UCT::getNextAction(Board &board) {
+bool Node::operator>(const Node &rhs) const {
+    return rhs < *this;
+}
 
-    //auto[_, tw, tb] = board.countBoard();
-    Node root(nullptr, board, Position(), -1);
+bool Node::operator<=(const Node &rhs) const {
+    return !(rhs < *this);
+}
 
+bool Node::operator>=(const Node &rhs) const {
+    return !(*this < rhs);
+}
 
-
+void UCT::MCTSThread(Node *root,Board &board,int total_count){
     int nodesVisited = 0;
-    for (int iter = 0; iter < 1200; iter++) {
+    for (int iter = 0; iter < total_count; iter++) {
         //if(iter%100==0) fprintf(stderr,"%d\n",iter );
         //printf("%d\n", iter);
-        Node *now = &root;
-        Board tmpBoard = board;
+        Node *now;
+        now = root;
+        Board tmpBoard;
+        tmpBoard = board;
         /* Selection */
+
         while (now->unexamined.empty() && !now->children.empty()) {
             now = now->selectChild();
             tmpBoard.doChoose(now->choose);
@@ -98,17 +109,18 @@ Position UCT::getNextAction(Board &board) {
         }
         /* Simulation */
 
-        int gameResult = FullSearch::TIE;
-        int winner = -1;
+        int gameResult;
+        gameResult = FullSearch::TIE;
+        int winner;
+        winner = -1;
 
         while (!tmpBoard.gameEnd) {
+            //printf("%d %p\n",this_thread::get_id(),&tmpBoard);
             int whiteNum,blackNum;
             tie(ignore, whiteNum, blackNum) = tmpBoard.countBoard();
 
-            if (whiteNum + blackNum > 8 * 8 - 4 - 3) {
-                tmpBoard.printBoard();
+            if (whiteNum + blackNum > 8 * 8 - 8) {
                 gameResult = fullsearch.getGameResult(tmpBoard);
-                printf("End:%d\n",gameResult);
                 if(gameResult==FullSearch::TIE) {
                     break;
                 } else if(gameResult == FullSearch::WIN && tmpBoard.nowPlayer == Board::BLACK){
@@ -118,12 +130,22 @@ Position UCT::getNextAction(Board &board) {
                 }else{
                     winner = Board::WHITE;
                 }
+                // printf("Winner:%d\n",winner);
                 break;
 
             }
 
             vector<Position> possibleChoose = tmpBoard.findPossibleChoose();
-            tmpBoard.doChoose(possibleChoose[rand() % possibleChoose.size()]);
+
+
+            uniform_int_distribution<int> dis(0, static_cast<int>(possibleChoose.size() - 1));
+
+            //printf("%d %d %p\n",this_thread::get_id(),possibleChoose.size(),&possibleChoose);
+            //tmpBoard.printBoard();
+            int random_num = dis(RNG);
+            tmpBoard.doChoose(possibleChoose[random_num]);
+            //tmpBoard.printBoard();
+            //printf("[]%d %d %p\n",this_thread::get_id(),possibleChoose.size(),&possibleChoose);
 
             ++nodesVisited;
         }
@@ -153,8 +175,56 @@ Position UCT::getNextAction(Board &board) {
         }
     }
     fprintf(stderr, "Node Count:%d\n", nodesVisited);
-    // for(auto child : root.children){
-    //     fprintf(stderr, "player:%d\n", child->nowPlayer );
-    // }
-    return root.mostVisitedChild()->choose;
 }
+
+Position UCT::getNextAction(Board &board) {
+    //auto[_, tw, tb] = board.countBoard();
+    const int THREAD_NUM = 2;
+
+    Node *roots[10];
+    thread *threads[10];
+    for(int thread_id = 0 ;thread_id < THREAD_NUM ;thread_id++){
+        roots[thread_id] = new Node(nullptr, board, Position(), -1);
+        threads[thread_id] = new thread(&UCT::MCTSThread,this,roots[thread_id],ref(board),6000);
+    }
+
+    for(int thread_id = 0 ;thread_id < THREAD_NUM ;thread_id++) {
+        threads[thread_id]->join();
+    }
+
+
+    sort(roots[0]->children.begin(),roots[0]->children.end(),[](Node *a, Node *b) -> bool {
+        return a->choose<b->choose;
+    });
+
+    for(int thread_id = 1 ;thread_id < THREAD_NUM ;thread_id++) {
+        sort(roots[thread_id]->children.begin(),roots[thread_id]->children.end(),[](Node *a, Node *b) -> bool {
+            return a->choose<b->choose;
+        });
+        for(int i=0;i<roots[thread_id]->children.size();i++){
+            roots[0]->children[i]->wins   += roots[thread_id]->children[i]->wins;
+            roots[0]->children[i]->visits += roots[thread_id]->children[i]->visits;
+//            printf("Child%d[%d,%d]  %lf/%d=%lf\n",thread_id,roots[thread_id]->children[i]->choose.row
+//                    ,roots[thread_id]->children[i]->choose.col
+//                    ,roots[thread_id]->children[i]->wins
+//                    ,roots[thread_id]->children[i]->visits
+//                    ,roots[thread_id]->children[i]->wins/ roots[thread_id]->children[i]->visits);
+
+        }
+    }
+
+    Position finalChoose = roots[0]->mostVisitedChild()->choose;
+//    for(auto child : roots[0]->children){
+//        fprintf(stderr, "player:%d\n", child->nowPlayer );
+//    }
+
+    for(int thread_id = 0 ;thread_id < THREAD_NUM ;thread_id++) {
+        delete(roots[thread_id]);
+        delete(threads[thread_id]);
+    }
+
+
+
+    return finalChoose;
+}
+

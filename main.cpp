@@ -54,31 +54,31 @@ int main(int argc, char const *argv[]) {
             if(book.hasNextAction(test)){
                 choose = book.getNextAction(test);
                 puts("test");
-            } /*else if (whiteNum + blackNum > 8 * 8 - 4 - 13) {
+            } /*else if (whiteNum + blackNum > 8 * 8 - 17) {
                 choose = fullsearch.getNextAction(test);
             }*/ else {
 
 
                 choose = uct.getNextAction(test);
-                if(test.nowPlayer  == Board::WHITE){
-                    int bestValue = INT_MIN;
-                    Position bestChoice;
-                    puts("=================begin!");
-                    auto possibleChoose = test.findPossibleChoose();
-                    for(auto p:possibleChoose){
-                        printf("[%d,%d]\n",p.row,p.col);
-                        Board tmptmpBoard = test;
-                        tmptmpBoard.doChoose(p);
-                        int value = Eval::evaluate(tmptmpBoard,test.nowPlayer);
-
-                        if(value>bestValue){
-                            bestValue = value;
-                            bestChoice = p;
-                        }
-                    }
-                    choose = bestChoice;
-                    puts("=================end!");
-                }
+//                if(test.nowPlayer  == Board::WHITE){
+//                    int bestValue = INT_MIN;
+//                    Position bestChoice;
+//                    puts("=================begin!");
+//                    auto possibleChoose = test.findPossibleChoose();
+//                    for(auto p:possibleChoose){
+//                        printf("[%d,%d]\n",p.row,p.col);
+//                        Board tmptmpBoard = test;
+//                        tmptmpBoard.doChoose(p);
+//                        int value = Eval::evaluate(tmptmpBoard,test.nowPlayer);
+//
+//                        if(value>bestValue){
+//                            bestValue = value;
+//                            bestChoice = p;
+//                        }
+//                    }
+//                    choose = bestChoice;
+//                    puts("=================end!");
+//                }
 
             }
             fprintf(stderr, "%s do [%d,%d]\n", test.nowPlayer == Board::BLACK ? "black" : "White", choose.row,

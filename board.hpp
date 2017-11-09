@@ -27,6 +27,14 @@ public:
 
     Position operator+=(const Position &rhs);
 
+    bool operator<(const Position &rhs) const;
+
+    bool operator>(const Position &rhs) const;
+
+    bool operator<=(const Position &rhs) const;
+
+    bool operator>=(const Position &rhs) const;
+
     int row, col;
 };
 
