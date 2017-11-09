@@ -29,7 +29,7 @@ BookChoose::BookChoose() {
 }
 
 bool BookChoose::loadBook() {
-    std::ifstream in("/Users/wxy/Projects/cpp/Othello_Server/book.bin", std::ios::binary | std::ios::in);
+    std::ifstream in("./book.bin", std::ios::binary | std::ios::in);
     if (!in) {
         fprintf(stderr, "cannot find Opening Book!\n");
     }
@@ -43,7 +43,7 @@ bool BookChoose::loadBook() {
     }
 
     //book = new Book(bookSize * 3 / 2);
-    printf("bookSize:%d\n",bookSize);
+    fprintf(stderr,"bookSize:%d\n",bookSize);
     UCT uct;
     for (int i = 0; i < bookSize; i++) {
         Board tmpBoard;
@@ -77,7 +77,7 @@ bool BookChoose::loadBook() {
 //            tie(ignore, whiteNum, blackNum) = tmpBoard.countBoard();
 
             if(!tmpBoard.isAbleToChoose(Position(row,col))){
-                printf("errror!!!");
+                fprintf(stderr,"errror!!!");
                 exit(1);
             }
 
@@ -119,8 +119,8 @@ bool BookChoose::loadBook() {
         }
 
     }
-    printf("Good_size:%lu\n",GoodChoose.size());
-    printf("Bad_size:%lu\n",BadChoose.size());
+    fprintf(stderr,"Good_size:%lu\n",GoodChoose.size());
+    fprintf(stderr, "Bad_size:%lu\n",BadChoose.size());
     in.close();
     return true;
 }
