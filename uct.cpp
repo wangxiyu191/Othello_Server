@@ -2,7 +2,7 @@
 
 
 using namespace std;
-auto RNG = std::default_random_engine {};
+auto RNG = std::default_random_engine {std::random_device{}()};
 
 
 Node::Node(Node *parentNode, Board &board, Position choose, int player) : parentNode(parentNode), choose(choose),
@@ -62,7 +62,7 @@ void Node::update(int blackNum, int whiteNum) {
 Node *Node::mostVisitedChild() {
     Node *maxNode = children[0];
     for (Node *child: children) {
-        fprintf(stderr, "[%d,%d] %lf/%d\n", child->choose.row, child->choose.col, child->wins, child->visits);
+        fprintf(stderr, "[%d,%d] %lf/%d=%lf\n", child->choose.row, child->choose.col, child->wins, child->visits, child->wins/child->visits);
         if (child->visits > maxNode->visits) {
             maxNode = child;
         }
@@ -73,12 +73,14 @@ Node *Node::mostVisitedChild() {
 
 
 Position UCT::getNextAction(Board &board) {
+
     //auto[_, tw, tb] = board.countBoard();
     Node root(nullptr, board, Position(), -1);
 
 
+
     int nodesVisited = 0;
-    for (int iter = 0; iter < 12000; iter++) {
+    for (int iter = 0; iter < 1200; iter++) {
         //if(iter%100==0) fprintf(stderr,"%d\n",iter );
         //printf("%d\n", iter);
         Node *now = &root;
@@ -104,7 +106,9 @@ Position UCT::getNextAction(Board &board) {
             tie(ignore, whiteNum, blackNum) = tmpBoard.countBoard();
 
             if (whiteNum + blackNum > 8 * 8 - 4 - 3) {
+                tmpBoard.printBoard();
                 gameResult = fullsearch.getGameResult(tmpBoard);
+                printf("End:%d\n",gameResult);
                 if(gameResult==FullSearch::TIE) {
                     break;
                 } else if(gameResult == FullSearch::WIN && tmpBoard.nowPlayer == Board::BLACK){

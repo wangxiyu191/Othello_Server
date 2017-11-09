@@ -21,6 +21,7 @@
 #include <limits>
 #include "board.hpp"
 #include "fullsearch.hpp"
+#include "eval.h"
 
 class Node {
 public:

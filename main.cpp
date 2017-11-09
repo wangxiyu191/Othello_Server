@@ -1,5 +1,7 @@
 #include "uct.hpp"
 #include "fullsearch.hpp"
+#include "Book.hpp"
+#include "eval.h"
 
 using namespace std;
 
@@ -12,6 +14,12 @@ int main(int argc, char const *argv[]) {
 
     UCT uct;
     FullSearch fullsearch;
+    BookChoose book;
+    if(!Eval::initPatterns()){
+        printf("Patterns Error!\n");
+        exit(1);
+    }
+
 
     if (argc == 2) {
         while (!test.findPossibleChoose().empty()) {
@@ -43,10 +51,35 @@ int main(int argc, char const *argv[]) {
             int whiteNum, blackNum;
             tie(ignore, whiteNum, blackNum) = test.countBoard();
             Position choose;
-            if (whiteNum + blackNum > 8 * 8 - 4 - 13) {
+            if(book.hasNextAction(test)){
+                choose = book.getNextAction(test);
+                puts("test");
+            } /*else if (whiteNum + blackNum > 8 * 8 - 4 - 13) {
                 choose = fullsearch.getNextAction(test);
-            } else {
+            }*/ else {
+
+
                 choose = uct.getNextAction(test);
+                if(test.nowPlayer  == Board::WHITE){
+                    int bestValue = INT_MIN;
+                    Position bestChoice;
+                    puts("=================begin!");
+                    auto possibleChoose = test.findPossibleChoose();
+                    for(auto p:possibleChoose){
+                        printf("[%d,%d]\n",p.row,p.col);
+                        Board tmptmpBoard = test;
+                        tmptmpBoard.doChoose(p);
+                        int value = Eval::evaluate(tmptmpBoard,test.nowPlayer);
+
+                        if(value>bestValue){
+                            bestValue = value;
+                            bestChoice = p;
+                        }
+                    }
+                    choose = bestChoice;
+                    puts("=================end!");
+                }
+
             }
             fprintf(stderr, "%s do [%d,%d]\n", test.nowPlayer == Board::BLACK ? "black" : "White", choose.row,
                     choose.col);

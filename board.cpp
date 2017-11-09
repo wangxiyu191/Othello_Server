@@ -302,3 +302,19 @@ void Board::printBoard() {
     }
 }
 
+void Board::turnLeft(){
+    Board new_board = *this;
+
+    Position now;
+    for (now.row = 0; now.row < 8; now.row++) {
+        for (now.col = 0; now.col < 8; now.col++) {
+            new_board.setBoard(Position(7-now.col,now.row),readBoard(now));
+        }
+    }
+    *this = new_board;
+}
+
+void Board::inverse(){
+    board = (~board)&used;
+}
+

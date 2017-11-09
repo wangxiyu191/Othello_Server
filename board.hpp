@@ -16,6 +16,7 @@
 #include <vector>
 #include <cstdlib>
 #include <cstdio>
+typedef uint64_t BitBoard;
 
 
 class Position {
@@ -41,16 +42,16 @@ class Board {
             {1,  -1},
             {-1, 1}
     };
-    uint64_t board;
-    uint64_t used;
     static const uint64_t U64_1=1;
 
 public:
+    uint64_t board;
+    uint64_t used;
     bool gameEnd = false;
     static const int EMPTY = -1;
     static const int WHITE = 0;
     static const int BLACK = 1;
-    int nowPlayer;
+    int nowPlayer = BLACK;
 
     Board();
 
@@ -82,6 +83,10 @@ public:
     void setEmpty(const Position &pos);
 
     bool isEmpty(const Position &pos);
+
+    void turnLeft();
+
+    void inverse();
 };
 
 #endif /* board_hpp */
