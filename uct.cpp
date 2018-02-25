@@ -44,11 +44,11 @@ Node *Node::selectChild() {
 void Node::update(int blackNum, int whiteNum) {
     ++visits;
     //fprintf(stderr,"====%d %d====\n",blackNum,whiteNum );
-    if (blackNum > whiteNum && nowPlayer == Board::BLACK) {
+    if (blackNum > whiteNum && nowPlayer != Board::BLACK) {
         //fprintf(stderr,"black\n");
         wins++;
     }
-    if (blackNum < whiteNum && nowPlayer == Board::WHITE) {
+    if (blackNum < whiteNum && nowPlayer != Board::WHITE) {
         //fprintf(stderr,"white\n");
         wins++;
     }
