@@ -14,7 +14,7 @@ using namespace std;
 FullSearch::FullSearch() = default;
 
 FullSearch::~FullSearch() = default;
-
+//搜索函数
 int FullSearch::search(Board &board) {
     if (board.gameEnd) {
         int whiteNum,blackNum;
@@ -58,6 +58,7 @@ int FullSearch::search(Board &board) {
 
         if (value == WIN) {
             isAbleToWin = true;
+            //已经找到赢的路了，剪枝
             break;
         } else if (value == TIE) {
             isAbleToTie = true;
@@ -114,7 +115,7 @@ Position FullSearch::getNextAction(const Board &board) {
     return bestChoose;
 }
 
-
+//查询当前盘面最终情况
 int FullSearch::getGameResult(const Board &board){
     Board tmpBoard = board;
     vector<Position> possibleChoose = tmpBoard.findPossibleChoose();

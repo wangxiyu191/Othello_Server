@@ -28,6 +28,7 @@ BookChoose::BookChoose() {
     }
 }
 
+//加载开局库
 bool BookChoose::loadBook() {
     std::ifstream in("./book.bin", std::ios::binary | std::ios::in);
     if (!in) {
@@ -125,6 +126,7 @@ bool BookChoose::loadBook() {
     return true;
 }
 
+//通过开局库获取下一步
 Position BookChoose::getNextAction(const Board &board){
     Board tmpBoard = board;
     tmpBoard.inverse();
@@ -133,6 +135,8 @@ Position BookChoose::getNextAction(const Board &board){
     }
     return GoodChoose[board];
 }
+
+//查询开局库中是否有下一步
 int BookChoose::hasNextAction(const Board &board){
     Board tmpBoard = board;
     tmpBoard.inverse();

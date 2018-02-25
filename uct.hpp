@@ -26,14 +26,14 @@
 
 class Node {
 public:
-    double wins = 0;
-    int visits = 0;
-    Node *parentNode;
-    Position choose;
+    double wins = 0;//该节点获胜次数
+    int visits = 0;//该节点访问次数
+    Node *parentNode;//父节点
+    Position choose;//该节点操作
 
-    std::vector<Position> unexamined;
-    std::vector<Node *> children;
-    int nowPlayer;
+    std::vector<Position> unexamined;//未被拓展的孩子节点
+    std::vector<Node *> children;//已被拓展的孩子节点
+    int nowPlayer;//当前玩家
 
     Node();
 

@@ -72,6 +72,7 @@ Board::Board(const Board &rhs) {
     gameEnd = rhs.gameEnd;
 }
 
+//获取棋盘某一位置的状态
 inline int Board::readBoard(const Position &pos){
     if(used & (U64_1 << ( (pos.row)*8+(pos.col) ))){
         if(board & (U64_1 << ( (pos.row)*8+(pos.col) ))){
@@ -84,6 +85,7 @@ inline int Board::readBoard(const Position &pos){
     }
 }
 
+//设置棋盘某一位置的状态
 inline void Board::setBoard(const Position &pos,int chess){
     if(chess == EMPTY) {
         used &= ~(U64_1 << ((pos.row ) * 8 + (pos.col )));
@@ -98,10 +100,12 @@ inline void Board::setBoard(const Position &pos,int chess){
     }
 }
 
+//将某一位置置空
 inline void Board::setEmpty(const Position &pos){
     used &= ~(U64_1 << ((pos.row ) * 8 + (pos.col )));
 }
 
+//查询某一位置是否为空
 inline bool Board::isEmpty(const Position &pos){
     return  !(used & U64_1 << ( (pos.row)*8+(pos.col) ) );
 }
@@ -122,7 +126,7 @@ Board &Board::operator=(const Board &rhs) {
     return *this;
 }
 
-
+//进行落子分析的核心函数
 std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bool requestChange) {
 
     //for speed
@@ -140,6 +144,7 @@ std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bo
     others.reserve(9);
     others.clear();
     Position now;
+    //向八个方向进行搜索
     for (const Position &nowd : direction) {
         now.row = pos.row + nowd.row;
         now.col = pos.col + nowd.col;
@@ -154,6 +159,7 @@ std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bo
             if ( posState == nowPlayer) {
                 //find another self
                 if (requestChange && !others.empty()) {
+                    //记录所有需要翻转的棋子
                     needToChange.insert(needToChange.end(), others.begin(), others.end());
                 }
                 if (!requestChange && hasOthers) {
@@ -183,20 +189,23 @@ std::tuple<bool, std::vector<Position>> Board::doChooseAnalysis(Position pos, bo
 
 }
 
+//判断某位置是否可以落子
 bool Board::isAbleToChoose(int row, int col) {
     return isAbleToChoose(Position(row, col));
 }
 
+//判断某位置是否可以落子
 bool Board::isAbleToChoose(Position pos) {
     auto[ableToChoose, needToChange] = doChooseAnalysis(pos, false);
     return ableToChoose;
 }
 
-
+//判断某位置是否可以落子并返回需要翻转的棋子位置
 std::tuple<bool, std::vector<Position>> Board::isAbleToChooseWithChange(Position pos) {
     return doChooseAnalysis(pos, true);
 }
 
+//寻找所有可以落子的位置
 std::vector<Position> Board::findPossibleChoose() {
     //for speed
     thread_local static std::vector<Position> possibleChoose;
@@ -220,6 +229,7 @@ std::vector<Position> Board::findPossibleChoose() {
     return possibleChoose;
 }
 
+//进行落子
 bool Board::doChoose(Position pos) {
     bool ableToChoose;
     std::vector<Position> needToChange;
@@ -274,6 +284,7 @@ bool Board::doChoose(Position pos) {
 //     return true;
 // }
 
+//数棋盘上各种棋子的个数
 std::tuple<bool, int, int> Board::countBoard() {
     //printBoard();
     int blackNum =  __builtin_popcountll(board&used);
@@ -307,6 +318,7 @@ std::tuple<bool, int, int> Board::countBoard() {
     return {whiteNum+blackNum == 8*8, whiteNum,blackNum};
 }
 
+//打印棋盘
 void Board::printBoard() {
     Position now;
     for (now.row = 0; now.row < 8; now.row++) {
@@ -326,6 +338,7 @@ void Board::printBoard() {
     fflush(stdout);
 }
 
+//将棋盘向左翻转
 void Board::turnLeft(){
     Board new_board = *this;
 
@@ -338,6 +351,7 @@ void Board::turnLeft(){
     *this = new_board;
 }
 
+//将黑棋和白棋倒置
 void Board::inverse(){
     board = (~board)&used;
 }

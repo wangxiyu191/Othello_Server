@@ -85,7 +85,7 @@ bool Node::operator<=(const Node &rhs) const {
 bool Node::operator>=(const Node &rhs) const {
     return !(*this < rhs);
 }
-
+//搜索线程
 void UCT::MCTSThread(Node *root,Board &board,int total_count){
     int nodesVisited = 0;
     for (int iter = 0; iter < total_count; iter++) {
@@ -119,6 +119,7 @@ void UCT::MCTSThread(Node *root,Board &board,int total_count){
             int whiteNum,blackNum;
             tie(ignore, whiteNum, blackNum) = tmpBoard.countBoard();
 
+            //直接判断终局结果
             if (whiteNum + blackNum > 8 * 8 - 8) {
                 gameResult = fullsearch.getGameResult(tmpBoard);
                 if(gameResult==FullSearch::TIE) {
@@ -183,11 +184,13 @@ Position UCT::getNextAction(Board &board) {
 
     Node *roots[10];
     thread *threads[10];
+
+    //启动线程
     for(int thread_id = 0 ;thread_id < THREAD_NUM ;thread_id++){
         roots[thread_id] = new Node(nullptr, board, Position(), -1);
         threads[thread_id] = new thread(&UCT::MCTSThread,this,roots[thread_id],ref(board),6000);
     }
-
+    //等待线程结束
     for(int thread_id = 0 ;thread_id < THREAD_NUM ;thread_id++) {
         threads[thread_id]->join();
     }
@@ -196,7 +199,7 @@ Position UCT::getNextAction(Board &board) {
     sort(roots[0]->children.begin(),roots[0]->children.end(),[](Node *a, Node *b) -> bool {
         return a->choose<b->choose;
     });
-
+    //累加所有线程结果
     for(int thread_id = 1 ;thread_id < THREAD_NUM ;thread_id++) {
         sort(roots[thread_id]->children.begin(),roots[thread_id]->children.end(),[](Node *a, Node *b) -> bool {
             return a->choose<b->choose;
