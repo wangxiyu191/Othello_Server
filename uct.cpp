@@ -76,7 +76,7 @@ Position UCT::getNextAction(Board &board) {
     Node root(nullptr, board, Position(), -1);
 
     int nodesVisited = 0;
-    for (int iter = 0; iter < 12000; iter++) {
+    for (int iter = 0; iter < 3000; iter++) {
         //if(iter%100==0) fprintf(stderr,"%d\n",iter );
         //printf("%d\n", iter);
         Node *now = &root;
