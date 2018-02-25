@@ -41,10 +41,10 @@ int FullSearch::search(Board &board) {
         if (tmpBoard.nowPlayer != board.nowPlayer) {
             switch (value) {
                 case WIN:
-                    value = LOST;
+                    value = WIN;
                     break;
                 case LOST:
-                    value = WIN;
+                    value = LOST;
                     break;
                 case TIE:
                     value = TIE;
@@ -84,10 +84,10 @@ Position FullSearch::getNextAction(Board &board) {
         if (tmpBoard.nowPlayer != board.nowPlayer) {
             switch (value) {
                 case WIN:
-                    value = LOST;
+                    value = WIN;
                     break;
                 case LOST:
-                    value = WIN;
+                    value = LOST;
                     break;
                 case TIE:
                     value = TIE;
