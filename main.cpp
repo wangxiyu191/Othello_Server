@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
                 Position choose;
                 int whiteNum, blackNum;
                 tie(ignore, whiteNum, blackNum) = test.countBoard();
-                if (whiteNum + blackNum > 8 * 8 - 4 - 10) {
+                if (whiteNum + blackNum > 8 * 8 - 4 - 10 + 1000 ) {
                     choose = fullsearch.getNextAction(test);
                 } else {
                     choose = uct.getNextAction(test);
