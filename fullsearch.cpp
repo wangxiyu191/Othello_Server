@@ -55,16 +55,16 @@ int FullSearch::search(Board &board) {
         //     printf("%d\n", value);
         // }
 
-        if (value == WIN) {
-            isAbleToWin = true;
-            break;
-        } else if (value == LOST) {
+        if (value == LOST) {
             isAbleToLost = true;
+            break;
+        } else if (value == WIN) {
+            isAbleToWin = true;
         }
     }
-    if (isAbleToWin) {
+    if (isAbleToLost) {
         return WIN;
-    } else if (isAbleToLost) {
+    } else if (isAbleToWin) {
         return LOST;
     } else {
         return TIE;
@@ -84,10 +84,10 @@ Position FullSearch::getNextAction(Board &board) {
         if (tmpBoard.nowPlayer != board.nowPlayer) {
             switch (value) {
                 case WIN:
-                    value = WIN;
+                    value = LOST;
                     break;
                 case LOST:
-                    value = LOST;
+                    value = WIN;
                     break;
                 case TIE:
                     value = TIE;
