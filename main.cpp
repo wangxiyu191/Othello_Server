@@ -35,6 +35,16 @@ int main(int argc, char const *argv[]) {
 
             //test.printBoard();
         }
+        int whiteNum, blackNum;
+        tie(ignore, whiteNum, blackNum) = test.countBoard();
+        if(whiteNum>blackNum) {
+            printf("WHITEWIN\n");
+        } else if (whiteNum<blackNum) {
+            printf("BLACKWIN\n");
+        }else{
+            printf("NONEWIN\n");
+        }
+        fflush(stdout);
 
     } else {
         test.printBoard();
