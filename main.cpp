@@ -12,6 +12,7 @@ int main(int argc, char const *argv[]) {
 
     UCT uct;
     FullSearch fullsearch;
+    srand(time(NULL));
 
     if (argc == 2) {
         while (!test.findPossibleChoose().empty()) {
